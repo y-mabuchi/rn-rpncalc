@@ -21,6 +21,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     justifyContent: "center",
     alignItems: "flex-end",
+    paddingRight: 20,
   },
   buttons: {
     flex: 5,
@@ -215,23 +216,134 @@ const App = () => {
     ],
   ];
 
-  const valueButton = (value) => {};
+  const [results, setResults] = React.useState([]);
+  const [current, setCurrent] = React.useState("0");
+  const [dotInputed, setDotInputed] = React.useState(false);
+  const [afterValueButton, setAfterValueButton] = React.useState(false);
 
-  const enterButton = () => {};
+  const valueButton = (value) => {
+    let currentString = current;
+    let newDotInputed = dotInputed;
 
-  const calcButton = (value) => {};
+    if (value == ".") {
+      // 「.」は2回入力できないようにする
+      if (!dotInputed) {
+        currentString = currentString + value;
+        newDotInputed = true;
+      }
+    } else if (currentString == "0") {
+      currentString = value;
+    } else {
+      currentString = currentString + value;
+    }
 
-  const acButton = () => {};
+    setCurrent(currentString);
+    setDotInputed(newDotInputed);
+    setAfterValueButton(true);
+  };
 
-  const cButton = () => {};
+  const enterButton = () => {
+    let newValue = NaN;
+
+    if (dotInputed) {
+      newValue = parseFloat(current);
+    } else {
+      newValue = parseInt(current);
+    }
+
+    if (isNaN(newValue)) {
+      return;
+    }
+
+    setCurrent("0");
+    setDotInputed(false);
+    setResults([...results, newValue]);
+    setAfterValueButton(false);
+  };
+
+  const calcButton = (value) => {
+    if (results.length < 2) {
+      return;
+    }
+
+    if (afterValueButton) {
+      return;
+    }
+
+    const target2 = results.pop();
+    const target1 = results.pop();
+    let newValue = null;
+
+    switch (value) {
+      case "+":
+        newValue = target1 + target2;
+        break;
+      case "-":
+        newValue = target1 - target2;
+        break;
+      case "*":
+        newValue = target1 * target2;
+        break;
+      case "/":
+        newValue = target1 / target2;
+        if (!isFinite(newValue)) {
+          newValue = null;
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (newValue == null) {
+      return;
+    }
+
+    setCurrent("0");
+    setDotInputed(false);
+    setResults([...results, newValue]);
+    setAfterValueButton(false);
+  };
+
+  const acButton = () => {
+    setCurrent("0");
+    setDotInputed(false);
+    setResults([]);
+    setAfterValueButton(false);
+  };
+
+  const cButton = () => {
+    setCurrent("0");
+    setDotInputed(false);
+    setAfterValueButton(false);
+  };
+
+  const showValue = (index) => {
+    if (afterValueButton || results.length == 0) {
+      index = index - 1;
+    }
+
+    if (index == -1) {
+      return current;
+    }
+
+    if (results.length > index) {
+      return results[results.length - 1 - index];
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* 結果を表示するView */}
       <View style={styles.results}>
-        <View style={styles.resultLine}></View>
-        <View style={styles.resultLine}></View>
-        <View style={styles.resultLine}></View>
+        <View style={styles.resultLine}>
+          <Text>{showValue(2)}</Text>
+        </View>
+        <View style={styles.resultLine}>
+          <Text>{showValue(1)}</Text>
+        </View>
+        <View style={styles.resultLine}>
+          <Text>{showValue(0)}</Text>
+        </View>
       </View>
 
       {/* ボタンを配置するView */}
